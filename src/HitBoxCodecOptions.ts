@@ -1,0 +1,148 @@
+
+export class HitBoxCodecOptions implements CodecOptions {
+    extension: string = "hitbox";
+    name: string = "HitBox";
+    remember: boolean = true;
+    load_filter: { extensions: string[], type: 'json' | 'text', condition?: ConditionResolvable } = {
+        extensions: ['hitbox'],
+        type: 'json',
+    }
+
+    compile(): string {
+        if (!Project) throw new Error('No project to compile.');
+        if ((Project as any).hitbox_type === "entity") {
+            const hitboxes = Cube.all.map((cube: Cube) => {
+                const from: number[] = cube.from;
+                const to: number[] = cube.to;
+                const size: number = (to[0] - from[0]) / 16;
+                return {
+                    position: {x: from[0] / 16 + size / 2, y: from[1] / 16, z: from[2] / 16 + size / 2},
+                    size: size
+                };
+            });
+            return JSON.stringify({hitboxes, type: "entity"}, null, 2);
+        } else if ((Project as any).hitbox_type === "block") {
+            const hitboxes = Cube.all.map((cube: Cube) => {
+                const from: number[] = cube.from;
+                return {
+                    position: {
+                        x: Math.round(from[0] / 16),
+                        y: Math.round(from[1] / 16),
+                        z: Math.round(from[2] / 16)
+                    }
+                };
+            });
+            return JSON.stringify({hitboxes, type: "block"}, null, 2);
+        } else if ((Project as any).hitbox_type === "interaction") {
+            const hitboxes = Cube.all.map((cube: Cube) => {
+                const from: number[] = cube.from;
+                const width: number = (cube.to[0] - from[0]) / 16;
+                return {
+                    position: {x: from[0] / 16 + width / 2, y: from[1] / 16, z: from[2] / 16 + width / 2},
+                    width: width,
+                    height: (cube.to[1] - from[1]) / 16
+                };
+            });
+            return JSON.stringify({hitboxes, type: "interaction"}, null, 2);
+        }
+        throw new Error("Invalid HitBox type");
+    }
+
+    export(): void {
+        if (!Project) throw new Error('No project to export.');
+        Blockbench.export({
+                name: (Project.name.toLowerCase().replace(/ /g, "_") || this.fileName()),
+                startpath: Project.save_path,
+                type: 'json',
+                extensions: [this.extension],
+                content: this.compile()
+            }, () => {
+                if (!Project) return;
+                Project.saved = true;
+            }
+        )
+    }
+
+    fileName(): string {
+        return "hitbox";
+    }
+
+    load(model: any, file: FileResult): void {
+        setupProject("hitbox");
+        addRecentProject(file);
+        this.parse(model);
+    }
+
+    parse(data: any): void {
+        if (data.type !== "entity" && data.type !== "block" && data.type !== "interaction") {
+            throw new Error("Invalid HitBox type");
+        }
+
+        const hitboxes = data.hitboxes;
+        if (!Array.isArray(hitboxes)) {
+            throw new Error("HitBox data is not an array");
+        }
+
+        (Project as any).hitbox_type = data.type;
+
+        if (Project?.view_mode) {
+            Project.view_mode = "wireframe";
+            if (data.type === 'entity') {
+                Project.name = 'Entity HitBox';
+                hitboxes.forEach((hitbox: any) => {
+                    const from: [number, number, number] = [
+                        hitbox.position.x * 16 - hitbox.size * 8,
+                        hitbox.position.y * 16,
+                        hitbox.position.z * 16 - hitbox.size * 8
+                    ];
+                    const to: [number, number, number] = [
+                        from[0] + hitbox.size * 16,
+                        from[1] + hitbox.size * 16,
+                        from[2] + hitbox.size * 16
+                    ];
+                    const cube: Cube = new Cube({from: from, to: to});
+                    cube.init();
+                    cube.setColor(0);
+                })
+            } else if (data.type === 'block') {
+                Project.name = 'Barrier Block HitBox';
+                hitboxes.forEach((hitbox: any) => {
+                    const from: [number, number, number] = [
+                        hitbox.position.x * 16,
+                        hitbox.position.y * 16,
+                        hitbox.position.z * 16
+                    ];
+                    const to: [number, number, number] = [
+                        from[0] + 16,
+                        from[1] + 16,
+                        from[2] + 16
+                    ];
+                    const cube: Cube = new Cube({from: from, to: to});
+                    cube.init();
+                    cube.setColor(0);
+                })
+            } else if (data.type === 'interaction') {
+                Project.name = 'Interaction Entity HitBox';
+                hitboxes.forEach((hitbox: any) => {
+                    const from: [number, number, number] = [
+                        hitbox.position.x * 16 - hitbox.width * 8,
+                        hitbox.position.y * 16,
+                        hitbox.position.z * 16 - hitbox.width * 8
+                    ];
+                    const to: [number, number, number] = [
+                        from[0] + hitbox.width * 16,
+                        from[1] + hitbox.height * 16,
+                        from[2] + hitbox.width * 16
+                    ];
+                    const cube: Cube = new Cube({from: from, to: to});
+                    cube.init();
+                    cube.setColor(0);
+                })
+            }
+        }
+
+        Canvas.updateView({elements: Cube.all, selection: true});
+
+    }
+
+}

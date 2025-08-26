@@ -1,0 +1,175 @@
+import {HitBoxCodecOptions} from "./HitBoxCodecOptions";
+import ModelFormat = Blockbench.ModelFormat;
+import ModelProject = Blockbench.ModelProject;
+
+let modelFormat: ModelFormat, codec: Codec, dialog: Dialog;
+
+BBPlugin.register('hitbox-utils', {
+    title: 'Hitbox Utils',
+    author: 'Misieur',
+    icon: 'icon',
+    description: 'Create and edit HitBoxes in Blockbench',
+    version: '1.0.0',
+    variant: 'both',
+    onload() {
+        dialog = new Dialog({
+            id: 'hitbox_utils_dialog',
+            title: 'Create a new HitBox',
+            form: {
+                hitbox_type: {
+                    label: 'HitBox Type',
+                    type: 'select',
+                    default: 'entity',
+                    options: {
+                        'entity': 'Entity - Cubic Hitboxes',
+                        'block': 'Barrier - Block Hitboxes',
+                        'interaction': 'Interaction Entity - Right Square Prism Non-solid Hitboxes'
+                    },
+                    description: "Entity type uses shulker or happy ghast" +
+                        "Barrier type uses barrier blocks" +
+                        "Interaction Entity type uses interaction entities"
+                }
+            },
+            onConfirm(formData) {
+                (Project as any).hitbox_type = formData.hitbox_type;
+                if (Project?.name) {
+                    if (formData.hitbox_type === 'entity') {
+                        Project.name = 'Entity HitBox';
+                    } else if (formData.hitbox_type === 'block') {
+                        Project.name = 'Barrier Block HitBox';
+                    } else if (formData.hitbox_type === 'interaction') {
+                        Project.name = 'Interaction Entity HitBox';
+                    }
+                }
+            }
+        });
+        codec = new Codec("hitbox", new HitBoxCodecOptions());
+        modelFormat = new ModelFormat("hitbox", {
+            id: 'hitbox',
+            name: 'HitBox',
+            description: 'A HitBox model',
+            animation_mode: false,
+            display_mode: false,
+            paint_mode: false,
+            pose_mode: false,
+            meshes: false,
+            texture_meshes: false,
+            rotate_cubes: false,
+            texture_folder: false,
+            onSetup(project: ModelProject, newModel?: boolean) {
+                if (!newModel) return;
+                const cube: Cube = new Cube({from: [0, 0, 0], to: [16, 16, 16]});
+                cube.init();
+                cube.setColor(0);
+                project.view_mode = "wireframe";
+                project.name = "Entity HitBox";
+
+                Canvas.updateView({elements: Cube.all, selection: true});
+            },
+            model_identifier: false,
+            codec: codec
+        });
+        modelFormat.new = function () {
+            newProject(this);
+
+            if (dialog) {
+                dialog.show();
+            }
+            return false;
+        };
+        new Property(ModelProject, 'string', 'hitbox_type', {
+            default: "entity",
+            values: ['entity', 'block', 'interaction'],
+            condition: {formats: [modelFormat.id]}
+        });
+        Blockbench.addListener<EventName>('finish_edit', data => {
+            if (Project?.format.id === "hitbox") {
+                if ((Project as any).hitbox_type === 'entity') {
+                    data.aspects.elements.forEach((cube: Cube) => {
+                        const from = [...cube.from] as [number, number, number];
+                        const to = [...cube.to] as [number, number, number];
+                        const size: [number, number, number] = [
+                            to[0] - from[0],
+                            to[1] - from[1],
+                            to[2] - from[2]
+                        ];
+                        if (size[0] === size[1] && size[1] === size[2]) return;
+                        if (size[0] === size[1] && size[0] !== size[2]) {
+                            size[0] = size[2];
+                            size[1] = size[2];
+                        } else if (size[0] === size[2] && size[0] !== size[1]) {
+                            size[0] = size[1];
+                            size[2] = size[1];
+                        } else {
+                            size[1] = size[0];
+                            size[2] = size[0];
+                        }
+                        from[0] = Math.roundTo(from[0], 1);
+                        from[1] = Math.roundTo(from[1], 1);
+                        from[2] = Math.roundTo(from[2], 1);
+                        cube.from[0] = from[0];
+                        cube.from[1] = from[1];
+                        cube.from[2] = from[2];
+                        cube.to[0] = from[0] + size[0];
+                        cube.to[1] = from[1] + size[1];
+                        cube.to[2] = from[2] + size[2];
+                        Canvas.updateView({
+                            elements: [cube],
+                            element_aspects: {geometry: true},
+                            selection: true
+                        });
+                    })
+                } else if ((Project as any).hitbox_type === 'block') {
+                    data.aspects.elements.forEach((cube: Cube) => {
+                        const from = [...cube.from] as [number, number, number];
+                        const to = [...cube.to] as [number, number, number];
+                        if (from[0] % 16 === 0 && from[1] % 16 === 0 && from[2] % 16 === 0 && to[0] === from[0] + 16 && to[1] === from[1] + 16 && to[2] === from[2] + 16) return;
+                        Math.roundTo(from[0], 1);
+                        Math.roundTo(from[1], 1);
+                        Math.roundTo(from[2], 1);
+
+                        from[0] = Math.round(from[0]/16) * 16;
+                        from[1] = Math.round(from[1]/16) * 16;
+                        from[2] = Math.round(from[2]/16) * 16;
+                        cube.from = from;
+                        cube.to = [from[0] + 16, from[1] + 16, from[2] + 16];
+
+                        Canvas.updateView({
+                            elements: [cube],
+                            element_aspects: {geometry: true},
+                            selection: true
+                        });
+                    })
+                } else if ((Project as any).hitbox_type === 'interaction') {
+                    data.aspects.elements.forEach((cube: Cube) => {
+                        const from = [...cube.from] as [number, number, number];
+                        const to = [...cube.to] as [number, number, number];
+                        const size: [number, number] = [
+                            to[0] - from[0],
+                            to[2] - from[2]
+                        ];
+                        if (size[0] === size[1]) return;
+                        const width = (size[0] + size[1]) / 2;
+                        cube.from[0] = Math.roundTo(from[0], 1);
+                        cube.from[2] = Math.roundTo(from[2], 1);
+                        cube.to[0] = Math.roundTo(from[0] + width, 1);
+                        cube.to[2] = Math.roundTo(from[2] + width, 1);
+                        cube.getUndoCopy()
+                        Canvas.updateView({
+                            elements: [cube],
+                            element_aspects: {geometry: true},
+                            selection: true
+                        });
+                    })
+                }
+            }
+        });
+    },
+    onunload() {
+        modelFormat.delete();
+        codec.delete();
+        Blockbench.removeListener('update_selection', () => {
+        });
+    }
+
+});
