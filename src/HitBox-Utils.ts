@@ -106,21 +106,30 @@ BBPlugin.register('hitbox-utils', {
                                 to[2] - from[2]
                             ];
 
-                            if (size[0] === size[1] || size[1] === size[2] || size[0] === size[2]) {
-                                return;
-                            }
-                            if (Math.abs(size[0] - size[1]) < Math.abs(size[1] - size[2]) && Math.abs(size[0] - size[1]) < Math.abs(size[0] - size[2])) {
+                            if (size[0] === size[1]) {
+                                if (size[2] >= size[0] && size[2] <= size[0] * 2) return;
+                                size[2] = Math.max(Math.min(size[0] * 2, size[2]), size[0]);
+                            } else if (size[0] === size[2]) {
+                                if (size[1] >= size[0] && size[1] <= size[0] * 2) return;
+                                size[1] = Math.max(Math.min(size[0] * 2, size[1]), size[0]);
+                            } else if (size[1] === size[2]) {
+                                if (size[1] >= size[0] && size[1] <= size[0] * 2) return;
+                                size[0] = Math.max(Math.min(size[2] * 2, size[0]), size[2]);
+                            } else if (Math.abs(size[0] - size[1]) < Math.abs(size[1] - size[2]) && Math.abs(size[0] - size[1]) < Math.abs(size[0] - size[2])) {
                                 const width: number = (size[0] + size[1]) / 2;
                                 size[0] = width;
                                 size[1] = width;
+                                size[2] = Math.min(Math.max(width * 2, size[2]), width);
                             } else if (Math.abs(size[1] - size[2]) < Math.abs(size[0] - size[1]) && Math.abs(size[1] - size[2]) < Math.abs(size[0] - size[2])) {
                                 const width: number = (size[1] + size[2]) / 2;
                                 size[1] = width;
                                 size[2] = width;
+                                size[0] = Math.min(Math.max(width * 2, size[0]), width);
                             } else {
                                 const width: number = (size[0] + size[2]) / 2;
                                 size[0] = width;
                                 size[2] = width;
+                                size[1] = Math.min(Math.max(width * 2, size[1]), width);
                             }
 
                             cube.from = from;

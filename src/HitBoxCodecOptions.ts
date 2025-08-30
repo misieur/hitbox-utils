@@ -45,7 +45,7 @@ export class HitBoxCodecOptions implements CodecOptions {
                     }
                     return {
                         position: {x: from[0] / 16 + size[0] / 2, y: from[1] / 16 + size[1] / 2, z: from[2] / 16 + size[2] / 2},
-                        width: width,
+                        size: width,
                         height: height,
                         face: face,
                         shulker_only: true
@@ -140,36 +140,36 @@ export class HitBoxCodecOptions implements CodecOptions {
                         let from: [number, number, number], to: [number, number, number];
                         if (hitbox.face === 0) {
                             from = [
-                                hitbox.position.x * 16 - (hitbox.width * 8),
+                                hitbox.position.x * 16 - (hitbox.size * 8),
                                 hitbox.position.y * 16 - (hitbox.height * 8),
-                                hitbox.position.z * 16 - (hitbox.width * 8)
+                                hitbox.position.z * 16 - (hitbox.size * 8)
                             ];
                             to = [
-                                from[0] + (hitbox.width * 16),
+                                from[0] + (hitbox.size * 16),
                                 from[1] + (hitbox.height * 16),
-                                from[2] + (hitbox.width * 16)
+                                from[2] + (hitbox.size * 16)
                             ];
                         } else if (hitbox.face === 3) {
                             from = [
-                                hitbox.position.x * 16 - (hitbox.width * 8),
-                                hitbox.position.y * 16 - (hitbox.width * 8),
+                                hitbox.position.x * 16 - (hitbox.size * 8),
+                                hitbox.position.y * 16 - (hitbox.size * 8),
                                 hitbox.position.z * 16 - (hitbox.height * 8)
                             ];
                             to = [
-                                from[0] + (hitbox.width * 16),
-                                from[1] + (hitbox.width * 16),
+                                from[0] + (hitbox.size * 16),
+                                from[1] + (hitbox.size * 16),
                                 from[2] + (hitbox.height * 16)
                             ];
                         } else {
                             from = [
                                 hitbox.position.x * 16 - (hitbox.height * 8),
-                                hitbox.position.y * 16 - (hitbox.width * 8),
-                                hitbox.position.z * 16 - (hitbox.width * 8)
+                                hitbox.position.y * 16 - (hitbox.size * 8),
+                                hitbox.position.z * 16 - (hitbox.size * 8)
                             ];
                             to = [
                                 from[0] + (hitbox.height * 16),
-                                from[1] + (hitbox.width * 16),
-                                from[2] + (hitbox.width * 16)
+                                from[1] + (hitbox.size * 16),
+                                from[2] + (hitbox.size * 16)
                             ];
                         }
                         const cube: Cube = new Cube({from: from, to: to});
