@@ -2,8 +2,10 @@ import {HitBoxCodecOptions} from "./HitBoxCodecOptions";
 import ModelFormat = Blockbench.ModelFormat;
 import ModelProject = Blockbench.ModelProject;
 import Cube = Blockbench.Cube;
+import {createExportButton, removeExportButton} from "./HitBoxExport";
 
-let modelFormat: ModelFormat, codec: Codec, dialog: Dialog, shulkerDialog: Dialog;
+export let modelFormat: ModelFormat;
+let codec: Codec, dialog: Dialog, shulkerDialog: Dialog;
 export const version = '1.1.0';
 
 BBPlugin.register('hitbox-utils', {
@@ -29,8 +31,8 @@ BBPlugin.register('hitbox-utils', {
                         'block': 'Barrier - Block Hitboxes',
                         'interaction': 'Interaction Entity - Right Square Prism Non-solid Hitboxes'
                     },
-                    description: "Entity type uses shulker or happy ghast" +
-                        "Barrier type uses barrier blocks" +
+                    description: "Entity type uses shulker or happy ghast\n" +
+                        "Barrier type uses barrier blocks\n" +
                         "Interaction Entity type uses interaction entities"
                 }
             },
@@ -62,13 +64,14 @@ BBPlugin.register('hitbox-utils', {
             texture_folder: false,
             onSetup(project: ModelProject, newModel?: boolean) {
                 if (!newModel) return;
-                const cube: Cube = new Cube({from: [2, 2, 2], to: [14, 14, 14]});
+                const cube: Cube = new Cube({from: [0, 0, 0], to: [16, 16, 16]});
                 cube.init();
                 cube.setColor(0);
                 project.view_mode = "wireframe";
                 project.name = "Entity HitBox";
 
                 Canvas.updateView({elements: Cube.all, selection: true});
+                createExportButton();
             },
             model_identifier: false,
             codec: codec
@@ -243,6 +246,17 @@ BBPlugin.register('hitbox-utils', {
                 data.object.to = [14, 14, 14]
                 Canvas.updateView({elements: [data.object], selection: true});
             }
+        });
+        Blockbench.addListener<EventName>('select_project', data => {
+            if (data.project.format === modelFormat) {
+                createExportButton();
+            } else {
+                removeExportButton();
+            }
+        });
+
+        Blockbench.addListener<EventName>('close_project', () => {
+            removeExportButton();
         });
     },
     onunload() {
