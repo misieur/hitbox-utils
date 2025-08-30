@@ -1,16 +1,20 @@
 import {HitBoxCodecOptions} from "./HitBoxCodecOptions";
 import ModelFormat = Blockbench.ModelFormat;
 import ModelProject = Blockbench.ModelProject;
+import Cube = Blockbench.Cube;
 
-let modelFormat: ModelFormat, codec: Codec, dialog: Dialog;
+let modelFormat: ModelFormat, codec: Codec, dialog: Dialog, shulkerDialog: Dialog;
+export const version = '1.1.0';
 
 BBPlugin.register('hitbox-utils', {
     title: 'Hitbox Utils',
     author: 'Misieur',
     icon: 'icon',
     description: 'Create and edit HitBoxes in Blockbench',
-    version: '1.0.0',
+    version: version,
     variant: 'both',
+    repository: "https://github.com/misieur/hitbox-utils",
+    website: 'https://discord.gg/5VSeDcyJt7',
     onload() {
         dialog = new Dialog({
             id: 'hitbox_utils_dialog',
@@ -58,7 +62,7 @@ BBPlugin.register('hitbox-utils', {
             texture_folder: false,
             onSetup(project: ModelProject, newModel?: boolean) {
                 if (!newModel) return;
-                const cube: Cube = new Cube({from: [0, 0, 0], to: [16, 16, 16]});
+                const cube: Cube = new Cube({from: [2, 2, 2], to: [14, 14, 14]});
                 cube.init();
                 cube.setColor(0);
                 project.view_mode = "wireframe";
@@ -82,10 +86,54 @@ BBPlugin.register('hitbox-utils', {
             values: ['entity', 'block', 'interaction'],
             condition: {formats: [modelFormat.id]}
         });
+        new Property(Cube, 'boolean', 'is_shulker_only', {
+            default: false,
+            condition: {formats: [modelFormat.id]}
+        });
         Blockbench.addListener<EventName>('finish_edit', data => {
             if (Project?.format.id === "hitbox") {
                 if ((Project as any).hitbox_type === 'entity') {
                     data.aspects.elements.forEach((cube: Cube) => {
+                        if ((cube as any).is_shulker_only) {
+                            const from = [...cube.from] as [number, number, number];
+                            const to = [...cube.to] as [number, number, number];
+                            const size: [number, number, number] = [
+                                to[0] - from[0],
+                                to[1] - from[1],
+                                to[2] - from[2]
+                            ];
+
+                            if (size[0] === size[1] || size[1] === size[2] || size[0] === size[2]) {
+                                return;
+                            }
+                            if (Math.abs(size[0] - size[1]) < Math.abs(size[1] - size[2]) && Math.abs(size[0] - size[1]) < Math.abs(size[0] - size[2])) {
+                                const width: number = (size[0] + size[1]) / 2;
+                                size[0] = width;
+                                size[1] = width;
+                            } else if (Math.abs(size[1] - size[2]) < Math.abs(size[0] - size[1]) && Math.abs(size[1] - size[2]) < Math.abs(size[0] - size[2])) {
+                                const width: number = (size[1] + size[2]) / 2;
+                                size[1] = width;
+                                size[2] = width;
+                            } else {
+                                const width: number = (size[0] + size[2]) / 2;
+                                size[0] = width;
+                                size[2] = width;
+                            }
+
+                            cube.from = from;
+                            cube.to = [
+                                from[0] + size[0],
+                                from[1] + size[1],
+                                from[2] + size[2]
+                            ];
+
+                            Canvas.updateView({
+                                elements: [cube],
+                                element_aspects: {geometry: true},
+                                selection: true
+                            });
+                            return;
+                        }
                         const from = [...cube.from] as [number, number, number];
                         const to = [...cube.to] as [number, number, number];
                         const size: [number, number, number] = [
@@ -107,12 +155,12 @@ BBPlugin.register('hitbox-utils', {
                         from[0] = Math.roundTo(from[0], 1);
                         from[1] = Math.roundTo(from[1], 1);
                         from[2] = Math.roundTo(from[2], 1);
-                        cube.from[0] = from[0];
-                        cube.from[1] = from[1];
-                        cube.from[2] = from[2];
-                        cube.to[0] = from[0] + size[0];
-                        cube.to[1] = from[1] + size[1];
-                        cube.to[2] = from[2] + size[2];
+                        cube.from = from;
+                        cube.to = [
+                            from[0] + size[0],
+                            from[1] + size[1],
+                            from[2] + size[2]
+                        ];
                         Canvas.updateView({
                             elements: [cube],
                             element_aspects: {geometry: true},
@@ -128,11 +176,15 @@ BBPlugin.register('hitbox-utils', {
                         Math.roundTo(from[1], 1);
                         Math.roundTo(from[2], 1);
 
-                        from[0] = Math.round(from[0]/16) * 16;
-                        from[1] = Math.round(from[1]/16) * 16;
-                        from[2] = Math.round(from[2]/16) * 16;
+                        from[0] = Math.round(from[0] / 16) * 16;
+                        from[1] = Math.round(from[1] / 16) * 16;
+                        from[2] = Math.round(from[2] / 16) * 16;
                         cube.from = from;
-                        cube.to = [from[0] + 16, from[1] + 16, from[2] + 16];
+                        cube.to = [
+                            from[0] + 16,
+                            from[1] + 16,
+                            from[2] + 16
+                        ];
 
                         Canvas.updateView({
                             elements: [cube],
@@ -164,11 +216,41 @@ BBPlugin.register('hitbox-utils', {
                 }
             }
         });
+        shulkerDialog = new Dialog({
+            id: 'shulker_only_dialog',
+            title: 'Shulker Only',
+            form: {
+                is_shulker_only: {
+                    label: 'Make this cube shulker only?',
+                    type: 'checkbox',
+                    description: "If enabled the cube will use shulkers only, will support height, width and face direction but will not be compatible with happy ghast and also more laggy.",
+                    default: false
+                }
+            }
+        });
+        Blockbench.addListener<EventName>("add_cube", data => {
+            if (Project?.format.id === "hitbox") {
+                if ((Project as any).hitbox_type === 'entity') {
+                    shulkerDialog.onConfirm = (formData) => {
+                        (data.object as any).is_shulker_only = formData.is_shulker_only;
+                        if (formData.is_shulker_only) {
+                            data.object.name = "shulker only cube";
+                        }
+                    };
+                    shulkerDialog.show();
+                }
+                data.object.from = [2, 2, 2]
+                data.object.to = [14, 14, 14]
+                Canvas.updateView({elements: [data.object], selection: true});
+            }
+        });
     },
     onunload() {
         modelFormat.delete();
         codec.delete();
-        Blockbench.removeListener('update_selection', () => {
+        Blockbench.removeListener<EventName>('finish_edit', () => {
+        });
+        Blockbench.removeListener<EventName>('add_cube', () => {
         });
     }
 
