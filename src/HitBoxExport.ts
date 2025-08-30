@@ -18,7 +18,7 @@ const exportDialog: Dialog = new Dialog({
     onConfirm(form) {
         switch (form.format) {
             case 'itemsadder': {
-                Blockbench.showStatusMessage("Exporting HitBox...", 2000);
+                Blockbench.setStatusBarText("Exporting HitBox...");
                 Blockbench.setProgress(0);
                 if (Project?.format !== modelFormat || (Project as any).hitbox_type !== 'block') {
                     Blockbench.showMessageBox({
@@ -66,8 +66,9 @@ const exportDialog: Dialog = new Dialog({
                 Blockbench.showMessageBox({
                     title: "Exported HitBox YAML",
                     message: "Copy the following YAML to your ItemsAdder item config:\n```YAML\n" + yaml + "\n```",
+                }, () => {
+                    Blockbench.setProgress(0);
                 });
-
             }
         }
     }
