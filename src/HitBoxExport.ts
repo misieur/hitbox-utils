@@ -11,7 +11,8 @@ const exportDialog: Dialog = new Dialog({
             type: 'select',
             default: 'itemsadder',
             options: {
-                'itemsadder': 'ItemsAdder (only barrier block models)'
+                'itemsadder': 'ItemsAdder (only barrier block models)',
+                'craftengine': 'CraftEngine (entity and interaction models)',
             }
         }
     },
@@ -66,6 +67,86 @@ const exportDialog: Dialog = new Dialog({
                 Blockbench.showMessageBox({
                     title: "Exported HitBox YAML",
                     message: "Copy the following YAML to your ItemsAdder item config:\n```YAML\n" + yaml + "\n```",
+                }, () => {
+                    Blockbench.setProgress(0);
+                });
+            } case 'craftengine': {
+                Blockbench.setStatusBarText("Exporting HitBox...");
+                Blockbench.setProgress(0);
+                if (Project?.format !== modelFormat || ((Project as any).hitbox_type !== 'entity' && ((Project as any).hitbox_type !== 'interaction'))) {
+                    Blockbench.showMessageBox({
+                        title: "Invalid Model",
+                        message: "The model has to be an Entity or Interaction model",
+                    })
+                    return;
+                }
+                if (!Cube.all.length) {
+                    Blockbench.showMessageBox({title: "Error", message: "No cubes found."});
+                    return;
+                }
+                Blockbench.setProgress(0.25);
+                let yaml: string = "hitboxes:\n";
+                if ((Project as any).hitbox_type === 'entity') {
+                    Cube.all.forEach((cube: Cube) => {
+                        if (!(cube as any).is_shulker_only) {
+                            const from: number[] = cube.from;
+                            const to: number[] = cube.to;
+                            const size: number = (to[0] - from[0]) / 16;
+                            yaml += "- type: happy_ghast\n" +
+                                "  position: " + (from[0] / 16 + size / 2) + "," + from[1] / 16 + "," + (from[2] / 16 + size / 2) + "\n" +
+                                "  scale: " + size + "\n";
+
+                        } else {
+                            const from: number[] = cube.from;
+                            const to: number[] = cube.to;
+                            const size: number[] = [
+                                (to[0] - from[0]) / 16,
+                                (to[1] - from[1]) / 16,
+                                (to[2] - from[2]) / 16
+                            ];
+                            let width: number, height: number;
+                            if (size[0] === size[2]) {
+                                width = size[0];
+                                height = Math.round(-size[1] / width * 100 + 100);
+                                yaml += "- type: shulker\n" +
+                                    "  position: " + (from[0] / 16 + width / 2) + "," + from[1] / 16 + "," + (from[2] / 16 + width / 2) + "\n" +
+                                    "  scale: " + width + "\n" +
+                                    "  peek: " + height + "\n" +
+                                    "  face: UP\n";
+                            } else if (size[0] === size[1]) {
+                                width = size[0];
+                                height = Math.round(-size[2] / width * 100 + 100);
+                                yaml += "- type: shulker\n" +
+                                    "  position: " + (from[0] / 16 + width / 2) + "," + (from[1] / 16 + width) / 2 + "," + from[2] / 16 + "\n" +
+                                    "  scale: " + width + "\n" +
+                                    "  peek: " + height + "\n" +
+                                    "  face: SOUTH\n";
+                            } else {
+                                width = size[1];
+                                height = Math.round(-size[0] / width * 100 + 100);
+                                yaml += "- type: shulker\n" +
+                                    "  position: " + from[0] / 16 + "," + (from[1] / 16 + width / 2) + "," + (from[2] / 16 + width) / 2 + "\n" +
+                                    "  scale: " + width + "\n" +
+                                    "  peek: " + height + "\n" +
+                                    "  face: EAST\n";
+                            }
+                        }
+                    });
+                } else if ((Project as any).hitbox_type === 'interaction') {
+                    Cube.all.forEach((cube: Cube) => {
+                        const from: number[] = cube.from;
+                        const width: number = (cube.to[0] - from[0]) / 16;
+                        yaml += "- type: interaction\n" +
+                            "  position: " + (from[0] / 16 + width / 2) + "," + from[1] / 16 + "," + (from[2] / 16 + width / 2) + "\n" +
+                            "  width: " + width + "\n" +
+                            "  height: " + (cube.to[1] - from[1]) / 16 + "\n";
+                    });
+                }
+
+                Blockbench.setProgress(1);
+                Blockbench.showMessageBox({
+                    title: "Exported HitBox YAML",
+                    message: "Copy the following YAML to your CraftEngine Furniture config:\n```YAML\n" + yaml + "\n```",
                 }, () => {
                     Blockbench.setProgress(0);
                 });
