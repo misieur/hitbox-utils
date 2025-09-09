@@ -250,10 +250,10 @@ BBPlugin.register('hitbox-utils', {
                         }
                     };
                     shulkerDialog.show();
+                    data.object.from = [2, 2, 2]
+                    data.object.to = [14, 14, 14]
+                    Canvas.updateView({elements: [data.object], selection: true});
                 }
-                data.object.from = [2, 2, 2]
-                data.object.to = [14, 14, 14]
-                Canvas.updateView({elements: [data.object], selection: true});
             }
         });
         Blockbench.addListener<EventName>('select_project', data => {

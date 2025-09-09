@@ -1,4 +1,4 @@
-import { version } from './HitBox-Utils';
+import {version} from './HitBox-Utils';
 
 export class HitBoxCodecOptions implements CodecOptions {
     extension: string = "hitbox";
@@ -33,23 +33,37 @@ export class HitBoxCodecOptions implements CodecOptions {
                     if (size[0] === size[2]) {
                         face = 0;
                         width = size[0];
-                        height = size[1];
+                        height = Math.round(-size[1] / width * 100 + 100);
+                        return {
+                            position: {x: from[0] / 16 + width / 2, y: from[1] / 16, z: from[2] / 16 + width / 2},
+                            size: width,
+                            height: height,
+                            face: face,
+                            shulker_only: true
+                        };
                     } else if (size[0] === size[1]) {
                         face = 3;
                         width = size[0];
-                        height = size[2];
+                        height = Math.round(-size[2] / width * 100 + 100);
+                        return {
+                            position: {x: from[0] / 16 + width / 2, y: from[1] / 16 + width / 2, z: from[2] / 16},
+                            size: width,
+                            height: height,
+                            face: face,
+                            shulker_only: true
+                        };
                     } else {
                         face = 5;
                         width = size[1];
-                        height = size[0];
+                        height = Math.round(-size[0] / width * 100 + 100);
+                        return {
+                            position: {x: from[0] / 16, y: from[1] / 16 + width / 2, z: from[2] / 16 + width / 2},
+                            size: width,
+                            height: height,
+                            face: face,
+                            shulker_only: true
+                        };
                     }
-                    return {
-                        position: {x: from[0] / 16 + size[0] / 2, y: from[1] / 16 + size[1] / 2, z: from[2] / 16 + size[2] / 2},
-                        size: width,
-                        height: height,
-                        face: face,
-                        shulker_only: true
-                    };
                 }
             });
             return JSON.stringify({hitboxes, type: "entity"}, null, 2);
@@ -75,7 +89,7 @@ export class HitBoxCodecOptions implements CodecOptions {
                     height: (cube.to[1] - from[1]) / 16
                 };
             });
-            return JSON.stringify({version: version ,hitboxes, type: "interaction"}, null, 2);
+            return JSON.stringify({version: version, hitboxes, type: "interaction"}, null, 2);
         }
         throw new Error("Invalid HitBox type");
     }
@@ -138,41 +152,46 @@ export class HitBoxCodecOptions implements CodecOptions {
                         cube.setColor(0);
                     } else {
                         let from: [number, number, number], to: [number, number, number];
+                        const width = hitbox.size;
+                        const hPercent = hitbox.height;
                         if (hitbox.face === 0) {
+                            const sizeY = width * (100 - hPercent) / 100;
                             from = [
-                                hitbox.position.x * 16 - (hitbox.size * 8),
-                                hitbox.position.y * 16 - (hitbox.height * 8),
-                                hitbox.position.z * 16 - (hitbox.size * 8)
+                                hitbox.position.x * 16 - (width * 8),
+                                hitbox.position.y * 16,
+                                hitbox.position.z * 16 - (width * 8)
                             ];
                             to = [
-                                from[0] + (hitbox.size * 16),
-                                from[1] + (hitbox.height * 16),
-                                from[2] + (hitbox.size * 16)
+                                from[0] + width * 16,
+                                from[1] + sizeY * 16,
+                                from[2] + width * 16
                             ];
                         } else if (hitbox.face === 3) {
+                            const sizeZ = width * (100 - hPercent) / 100;
                             from = [
-                                hitbox.position.x * 16 - (hitbox.size * 8),
-                                hitbox.position.y * 16 - (hitbox.size * 8),
-                                hitbox.position.z * 16 - (hitbox.height * 8)
+                                hitbox.position.x * 16 - (width * 8),
+                                hitbox.position.y * 16 - (width * 8),
+                                hitbox.position.z * 16
                             ];
                             to = [
-                                from[0] + (hitbox.size * 16),
-                                from[1] + (hitbox.size * 16),
-                                from[2] + (hitbox.height * 16)
+                                from[0] + width * 16,
+                                from[1] + width * 16,
+                                from[2] + sizeZ * 16
                             ];
                         } else {
+                            const sizeX = width * (100 - hPercent) / 100;
                             from = [
-                                hitbox.position.x * 16 - (hitbox.height * 8),
-                                hitbox.position.y * 16 - (hitbox.size * 8),
-                                hitbox.position.z * 16 - (hitbox.size * 8)
+                                hitbox.position.x * 16,
+                                hitbox.position.y * 16 - (width * 8),
+                                hitbox.position.z * 16 - (width * 8)
                             ];
                             to = [
-                                from[0] + (hitbox.height * 16),
-                                from[1] + (hitbox.size * 16),
-                                from[2] + (hitbox.size * 16)
+                                from[0] + sizeX * 16,
+                                from[1] + width * 16,
+                                from[2] + width * 16
                             ];
                         }
-                        const cube: Cube = new Cube({from: from, to: to});
+                        const cube: Cube = new Cube({from, to});
                         cube.init();
                         cube.setColor(0);
                         (cube as any).is_shulker_only = true;
