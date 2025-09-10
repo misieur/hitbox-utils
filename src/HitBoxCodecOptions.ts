@@ -46,7 +46,7 @@ export class HitBoxCodecOptions implements CodecOptions {
                         width = size[0];
                         height = Math.round(-size[2] / width * 100 + 100);
                         return {
-                            position: {x: from[0] / 16 + width / 2, y: from[1] / 16 + width / 2, z: from[2] / 16},
+                            position: {x: from[0] / 16 + width / 2, y: from[1] / 16, z: from[2] / 16 + width / 2},
                             size: width,
                             height: height,
                             face: face,
@@ -57,7 +57,7 @@ export class HitBoxCodecOptions implements CodecOptions {
                         width = size[1];
                         height = Math.round(-size[0] / width * 100 + 100);
                         return {
-                            position: {x: from[0] / 16, y: from[1] / 16 + width / 2, z: from[2] / 16 + width / 2},
+                            position: {x: from[0] / 16 + width / 2, y: from[1] / 16, z: from[2] / 16 + width / 2},
                             size: width,
                             height: height,
                             face: face,
@@ -170,8 +170,8 @@ export class HitBoxCodecOptions implements CodecOptions {
                             const sizeZ = width * (100 - hPercent) / 100;
                             from = [
                                 hitbox.position.x * 16 - (width * 8),
-                                hitbox.position.y * 16 - (width * 8),
-                                hitbox.position.z * 16
+                                hitbox.position.y * 16,
+                                hitbox.position.z * 16 - (width * 8)
                             ];
                             to = [
                                 from[0] + width * 16,
@@ -181,8 +181,8 @@ export class HitBoxCodecOptions implements CodecOptions {
                         } else {
                             const sizeX = width * (100 - hPercent) / 100;
                             from = [
-                                hitbox.position.x * 16,
-                                hitbox.position.y * 16 - (width * 8),
+                                hitbox.position.x * 16 - (width * 8),
+                                hitbox.position.y * 16,
                                 hitbox.position.z * 16 - (width * 8)
                             ];
                             to = [
