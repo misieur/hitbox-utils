@@ -93,7 +93,7 @@ const exportDialog: Dialog = new Dialog({
                             const to: number[] = cube.to;
                             const size: number = (to[0] - from[0]) / 16;
                             yaml += "- type: happy_ghast\n" +
-                                "  position: " + (from[0] / 16 + size / 2) + "," + from[1] / 16 + "," + (from[2] / 16 + size / 2) + "\n" +
+                                "  position: " + (from[0] / 16 + size / 2 - 0.5) + "," + (from[1] / 16 - 0.375) + "," + (from[2] / 16 + size / 2 - 0.5) + "\n" +
                                 "  scale: " + size + "\n";
 
                         } else {
@@ -109,26 +109,26 @@ const exportDialog: Dialog = new Dialog({
                                 width = size[0];
                                 height = Math.round(-size[1] / width * 100 + 100);
                                 yaml += "- type: shulker\n" +
-                                    "  position: " + (from[0] / 16 + width / 2) + "," + from[1] / 16 + "," + (from[2] / 16 + width / 2) + "\n" +
+                                    "  position: " + (from[0] / 16 + width / 2 - 0.5) + "," + (from[1] / 16 - 0.375) + "," + (from[2] / 16 + width / 2 - 0.5) + "\n" +
                                     "  scale: " + width + "\n" +
                                     "  peek: " + height + "\n" +
-                                    "  face: UP\n";
+                                    "  direction: UP\n";
                             } else if (size[0] === size[1]) {
                                 width = size[0];
                                 height = Math.round(-size[2] / width * 100 + 100);
                                 yaml += "- type: shulker\n" +
-                                    "  position: " + (from[0] / 16 + width / 2) + "," + (from[1] / 16 + width) / 2 + "," + from[2] / 16 + "\n" +
+                                    "  position: " + (from[0] / 16 + width / 2 - 0.5) + "," + ((from[1] / 16 + width) / 2 - 0.375) + "," + (from[2] / 16 - 0.5) + "\n" +
                                     "  scale: " + width + "\n" +
                                     "  peek: " + height + "\n" +
-                                    "  face: SOUTH\n";
+                                    "  direction: SOUTH\n";
                             } else {
                                 width = size[1];
                                 height = Math.round(-size[0] / width * 100 + 100);
                                 yaml += "- type: shulker\n" +
-                                    "  position: " + from[0] / 16 + "," + (from[1] / 16 + width / 2) + "," + (from[2] / 16 + width) / 2 + "\n" +
+                                    "  position: " + (from[0] / 16 - 0.5) + "," + (from[1] / 16 + width / 2 - 0.375) + "," + ((from[2] / 16 + width) / 2 - 0.5) + "\n" +
                                     "  scale: " + width + "\n" +
                                     "  peek: " + height + "\n" +
-                                    "  face: EAST\n";
+                                    "  direction: EAST\n";
                             }
                         }
                     });
@@ -137,7 +137,7 @@ const exportDialog: Dialog = new Dialog({
                         const from: number[] = cube.from;
                         const width: number = (cube.to[0] - from[0]) / 16;
                         yaml += "- type: interaction\n" +
-                            "  position: " + (from[0] / 16 + width / 2) + "," + from[1] / 16 + "," + (from[2] / 16 + width / 2) + "\n" +
+                            "  position: " + (from[0] / 16 + width / 2 - 0.5) + "," + (from[1] / 16 - 0.375) + "," + (from[2] / 16 + width / 2 - 0.5) + "\n" +
                             "  width: " + width + "\n" +
                             "  height: " + (cube.to[1] - from[1]) / 16 + "\n";
                     });
