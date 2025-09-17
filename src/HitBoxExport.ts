@@ -169,9 +169,7 @@ export function createExportButton() {
 
 export function removeExportButton() {
     if (button) {
-        console.log(MenuBar.menus.tools.structure);
         MenuBar.removeAction('tools');
-        console.log(MenuBar.menus.tools.structure);
         button.delete();
         button = undefined;
     }

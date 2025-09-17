@@ -1,12 +1,173 @@
 import {HitBoxCodecOptions} from "./HitBoxCodecOptions";
+import {createExportButton, removeExportButton} from "./HitBoxExport";
 import ModelFormat = Blockbench.ModelFormat;
 import ModelProject = Blockbench.ModelProject;
 import Cube = Blockbench.Cube;
-import {createExportButton, removeExportButton} from "./HitBoxExport";
 
 export let modelFormat: ModelFormat;
 let codec: Codec, dialog: Dialog, shulkerDialog: Dialog;
 export const version = '1.1.0';
+
+function onSelectProject(data: any) {
+    if (data.project.format === modelFormat) {
+        createExportButton();
+    } else {
+        removeExportButton();
+    }
+}
+
+function onAddCube(data: any) {
+    if (Project?.format.id === "hitbox") {
+        if ((Project as any).hitbox_type === 'entity') {
+            shulkerDialog.onConfirm = (formData) => {
+                (data.object as any).is_shulker_only = formData.is_shulker_only;
+                if (formData.is_shulker_only) {
+                    data.object.name = "shulker only cube";
+                }
+            };
+            shulkerDialog.show();
+            data.object.from = [2, 2, 2]
+            data.object.to = [14, 14, 14]
+            Canvas.updateView({elements: [data.object], selection: true});
+        }
+    }
+}
+
+function onFinishEdit(data: any) {
+    if (Project?.format.id === "hitbox") {
+        if ((Project as any).hitbox_type === 'entity') {
+            data.aspects.elements.forEach((cube: Cube) => {
+                if ((cube as any).is_shulker_only) {
+                    const from = [...cube.from] as [number, number, number];
+                    const to = [...cube.to] as [number, number, number];
+                    const size: [number, number, number] = [
+                        to[0] - from[0],
+                        to[1] - from[1],
+                        to[2] - from[2]
+                    ];
+
+                    if (size[0] === size[1]) {
+                        if (size[2] >= size[0] && size[2] <= size[0] * 2) return;
+                        size[2] = Math.max(Math.min(size[0] * 2, size[2]), size[0]);
+                    } else if (size[0] === size[2]) {
+                        if (size[1] >= size[0] && size[1] <= size[0] * 2) return;
+                        size[1] = Math.max(Math.min(size[0] * 2, size[1]), size[0]);
+                    } else if (size[1] === size[2]) {
+                        if (size[1] >= size[0] && size[1] <= size[0] * 2) return;
+                        size[0] = Math.max(Math.min(size[2] * 2, size[0]), size[2]);
+                    } else if (Math.abs(size[0] - size[1]) < Math.abs(size[1] - size[2]) && Math.abs(size[0] - size[1]) < Math.abs(size[0] - size[2])) {
+                        const width: number = (size[0] + size[1]) / 2;
+                        size[0] = width;
+                        size[1] = width;
+                        size[2] = Math.min(Math.max(width * 2, size[2]), width);
+                    } else if (Math.abs(size[1] - size[2]) < Math.abs(size[0] - size[1]) && Math.abs(size[1] - size[2]) < Math.abs(size[0] - size[2])) {
+                        const width: number = (size[1] + size[2]) / 2;
+                        size[1] = width;
+                        size[2] = width;
+                        size[0] = Math.min(Math.max(width * 2, size[0]), width);
+                    } else {
+                        const width: number = (size[0] + size[2]) / 2;
+                        size[0] = width;
+                        size[2] = width;
+                        size[1] = Math.min(Math.max(width * 2, size[1]), width);
+                    }
+
+                    cube.from = from;
+                    cube.to = [
+                        from[0] + size[0],
+                        from[1] + size[1],
+                        from[2] + size[2]
+                    ];
+
+                    Canvas.updateView({
+                        elements: [cube],
+                        element_aspects: {geometry: true},
+                        selection: true
+                    });
+                    return;
+                }
+                const from = [...cube.from] as [number, number, number];
+                const to = [...cube.to] as [number, number, number];
+                const size: [number, number, number] = [
+                    to[0] - from[0],
+                    to[1] - from[1],
+                    to[2] - from[2]
+                ];
+                if (size[0] === size[1] && size[1] === size[2]) return;
+                if (size[0] === size[1] && size[0] !== size[2]) {
+                    size[0] = size[2];
+                    size[1] = size[2];
+                } else if (size[0] === size[2] && size[0] !== size[1]) {
+                    size[0] = size[1];
+                    size[2] = size[1];
+                } else {
+                    size[1] = size[0];
+                    size[2] = size[0];
+                }
+                from[0] = Math.roundTo(from[0], 1);
+                from[1] = Math.roundTo(from[1], 1);
+                from[2] = Math.roundTo(from[2], 1);
+                cube.from = from;
+                cube.to = [
+                    from[0] + size[0],
+                    from[1] + size[1],
+                    from[2] + size[2]
+                ];
+                Canvas.updateView({
+                    elements: [cube],
+                    element_aspects: {geometry: true},
+                    selection: true
+                });
+            })
+        } else if ((Project as any).hitbox_type === 'block') {
+            data.aspects.elements.forEach((cube: Cube) => {
+                const from = [...cube.from] as [number, number, number];
+                const to = [...cube.to] as [number, number, number];
+                if (from[0] % 16 === 0 && from[1] % 16 === 0 && from[2] % 16 === 0 && to[0] === from[0] + 16 && to[1] === from[1] + 16 && to[2] === from[2] + 16) return;
+                Math.roundTo(from[0], 1);
+                Math.roundTo(from[1], 1);
+                Math.roundTo(from[2], 1);
+
+                from[0] = Math.round(from[0] / 16) * 16;
+                from[1] = Math.round(from[1] / 16) * 16;
+                from[2] = Math.round(from[2] / 16) * 16;
+                cube.from = from;
+                cube.to = [
+                    from[0] + 16,
+                    from[1] + 16,
+                    from[2] + 16
+                ];
+
+                Canvas.updateView({
+                    elements: [cube],
+                    element_aspects: {geometry: true},
+                    selection: true
+                });
+            })
+        } else if ((Project as any).hitbox_type === 'interaction') {
+            data.aspects.elements.forEach((cube: Cube) => {
+                const from = [...cube.from] as [number, number, number];
+                const to = [...cube.to] as [number, number, number];
+                const size: [number, number] = [
+                    to[0] - from[0],
+                    to[2] - from[2]
+                ];
+                if (size[0] === size[1]) return;
+                const width = (size[0] + size[1]) / 2;
+                cube.from[0] = Math.roundTo(from[0], 1);
+                cube.from[2] = Math.roundTo(from[2], 1);
+                cube.to[0] = Math.roundTo(from[0] + width, 1);
+                cube.to[2] = Math.roundTo(from[2] + width, 1);
+                cube.getUndoCopy()
+                Canvas.updateView({
+                    elements: [cube],
+                    element_aspects: {geometry: true},
+                    selection: true
+                });
+            })
+        }
+    }
+}
 
 BBPlugin.register('hitbox-utils', {
     title: 'Hitbox Utils',
@@ -93,141 +254,6 @@ BBPlugin.register('hitbox-utils', {
             default: false,
             condition: {formats: [modelFormat.id]}
         });
-        Blockbench.addListener<EventName>('finish_edit', data => {
-            if (Project?.format.id === "hitbox") {
-                if ((Project as any).hitbox_type === 'entity') {
-                    data.aspects.elements.forEach((cube: Cube) => {
-                        if ((cube as any).is_shulker_only) {
-                            const from = [...cube.from] as [number, number, number];
-                            const to = [...cube.to] as [number, number, number];
-                            const size: [number, number, number] = [
-                                to[0] - from[0],
-                                to[1] - from[1],
-                                to[2] - from[2]
-                            ];
-
-                            if (size[0] === size[1]) {
-                                if (size[2] >= size[0] && size[2] <= size[0] * 2) return;
-                                size[2] = Math.max(Math.min(size[0] * 2, size[2]), size[0]);
-                            } else if (size[0] === size[2]) {
-                                if (size[1] >= size[0] && size[1] <= size[0] * 2) return;
-                                size[1] = Math.max(Math.min(size[0] * 2, size[1]), size[0]);
-                            } else if (size[1] === size[2]) {
-                                if (size[1] >= size[0] && size[1] <= size[0] * 2) return;
-                                size[0] = Math.max(Math.min(size[2] * 2, size[0]), size[2]);
-                            } else if (Math.abs(size[0] - size[1]) < Math.abs(size[1] - size[2]) && Math.abs(size[0] - size[1]) < Math.abs(size[0] - size[2])) {
-                                const width: number = (size[0] + size[1]) / 2;
-                                size[0] = width;
-                                size[1] = width;
-                                size[2] = Math.min(Math.max(width * 2, size[2]), width);
-                            } else if (Math.abs(size[1] - size[2]) < Math.abs(size[0] - size[1]) && Math.abs(size[1] - size[2]) < Math.abs(size[0] - size[2])) {
-                                const width: number = (size[1] + size[2]) / 2;
-                                size[1] = width;
-                                size[2] = width;
-                                size[0] = Math.min(Math.max(width * 2, size[0]), width);
-                            } else {
-                                const width: number = (size[0] + size[2]) / 2;
-                                size[0] = width;
-                                size[2] = width;
-                                size[1] = Math.min(Math.max(width * 2, size[1]), width);
-                            }
-
-                            cube.from = from;
-                            cube.to = [
-                                from[0] + size[0],
-                                from[1] + size[1],
-                                from[2] + size[2]
-                            ];
-
-                            Canvas.updateView({
-                                elements: [cube],
-                                element_aspects: {geometry: true},
-                                selection: true
-                            });
-                            return;
-                        }
-                        const from = [...cube.from] as [number, number, number];
-                        const to = [...cube.to] as [number, number, number];
-                        const size: [number, number, number] = [
-                            to[0] - from[0],
-                            to[1] - from[1],
-                            to[2] - from[2]
-                        ];
-                        if (size[0] === size[1] && size[1] === size[2]) return;
-                        if (size[0] === size[1] && size[0] !== size[2]) {
-                            size[0] = size[2];
-                            size[1] = size[2];
-                        } else if (size[0] === size[2] && size[0] !== size[1]) {
-                            size[0] = size[1];
-                            size[2] = size[1];
-                        } else {
-                            size[1] = size[0];
-                            size[2] = size[0];
-                        }
-                        from[0] = Math.roundTo(from[0], 1);
-                        from[1] = Math.roundTo(from[1], 1);
-                        from[2] = Math.roundTo(from[2], 1);
-                        cube.from = from;
-                        cube.to = [
-                            from[0] + size[0],
-                            from[1] + size[1],
-                            from[2] + size[2]
-                        ];
-                        Canvas.updateView({
-                            elements: [cube],
-                            element_aspects: {geometry: true},
-                            selection: true
-                        });
-                    })
-                } else if ((Project as any).hitbox_type === 'block') {
-                    data.aspects.elements.forEach((cube: Cube) => {
-                        const from = [...cube.from] as [number, number, number];
-                        const to = [...cube.to] as [number, number, number];
-                        if (from[0] % 16 === 0 && from[1] % 16 === 0 && from[2] % 16 === 0 && to[0] === from[0] + 16 && to[1] === from[1] + 16 && to[2] === from[2] + 16) return;
-                        Math.roundTo(from[0], 1);
-                        Math.roundTo(from[1], 1);
-                        Math.roundTo(from[2], 1);
-
-                        from[0] = Math.round(from[0] / 16) * 16;
-                        from[1] = Math.round(from[1] / 16) * 16;
-                        from[2] = Math.round(from[2] / 16) * 16;
-                        cube.from = from;
-                        cube.to = [
-                            from[0] + 16,
-                            from[1] + 16,
-                            from[2] + 16
-                        ];
-
-                        Canvas.updateView({
-                            elements: [cube],
-                            element_aspects: {geometry: true},
-                            selection: true
-                        });
-                    })
-                } else if ((Project as any).hitbox_type === 'interaction') {
-                    data.aspects.elements.forEach((cube: Cube) => {
-                        const from = [...cube.from] as [number, number, number];
-                        const to = [...cube.to] as [number, number, number];
-                        const size: [number, number] = [
-                            to[0] - from[0],
-                            to[2] - from[2]
-                        ];
-                        if (size[0] === size[1]) return;
-                        const width = (size[0] + size[1]) / 2;
-                        cube.from[0] = Math.roundTo(from[0], 1);
-                        cube.from[2] = Math.roundTo(from[2], 1);
-                        cube.to[0] = Math.roundTo(from[0] + width, 1);
-                        cube.to[2] = Math.roundTo(from[2] + width, 1);
-                        cube.getUndoCopy()
-                        Canvas.updateView({
-                            elements: [cube],
-                            element_aspects: {geometry: true},
-                            selection: true
-                        });
-                    })
-                }
-            }
-        });
         shulkerDialog = new Dialog({
             id: 'shulker_only_dialog',
             title: 'Shulker Only',
@@ -240,30 +266,15 @@ BBPlugin.register('hitbox-utils', {
                 }
             }
         });
+        Blockbench.addListener<EventName>('finish_edit', data => {
+            onFinishEdit(data);
+        });
         Blockbench.addListener<EventName>("add_cube", data => {
-            if (Project?.format.id === "hitbox") {
-                if ((Project as any).hitbox_type === 'entity') {
-                    shulkerDialog.onConfirm = (formData) => {
-                        (data.object as any).is_shulker_only = formData.is_shulker_only;
-                        if (formData.is_shulker_only) {
-                            data.object.name = "shulker only cube";
-                        }
-                    };
-                    shulkerDialog.show();
-                    data.object.from = [2, 2, 2]
-                    data.object.to = [14, 14, 14]
-                    Canvas.updateView({elements: [data.object], selection: true});
-                }
-            }
+            onAddCube(data);
         });
         Blockbench.addListener<EventName>('select_project', data => {
-            if (data.project.format === modelFormat) {
-                createExportButton();
-            } else {
-                removeExportButton();
-            }
+            onSelectProject(data);
         });
-
         Blockbench.addListener<EventName>('close_project', () => {
             removeExportButton();
         });
@@ -271,9 +282,17 @@ BBPlugin.register('hitbox-utils', {
     onunload() {
         modelFormat.delete();
         codec.delete();
-        Blockbench.removeListener<EventName>('finish_edit', () => {
+        Blockbench.removeListener<EventName>('finish_edit', data => {
+            onFinishEdit(data);
         });
-        Blockbench.removeListener<EventName>('add_cube', () => {
+        Blockbench.removeListener<EventName>('add_cube', data => {
+            onAddCube(data);
+        });
+        Blockbench.removeListener<EventName>('close_project', () => {
+            removeExportButton();
+        });
+        Blockbench.removeListener<EventName>('select_project', data => {
+            onSelectProject(data);
         });
     }
 
