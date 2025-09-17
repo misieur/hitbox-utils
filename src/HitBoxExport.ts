@@ -70,7 +70,8 @@ const exportDialog: Dialog = new Dialog({
                 }, () => {
                     Blockbench.setProgress(0);
                 });
-            } case 'craftengine': {
+            }
+            case 'craftengine': {
                 Blockbench.setStatusBarText("Exporting HitBox...");
                 Blockbench.setProgress(0);
                 if (Project?.format !== modelFormat || ((Project as any).hitbox_type !== 'entity' && ((Project as any).hitbox_type !== 'interaction'))) {
@@ -91,9 +92,9 @@ const exportDialog: Dialog = new Dialog({
                         if (!(cube as any).is_shulker_only) {
                             const from: number[] = cube.from;
                             const to: number[] = cube.to;
-                            const size: number = (to[0] - from[0]) / 16;
+                            const size: number = (to[0] - from[0]) / 16 / 4;
                             yaml += "- type: happy_ghast\n" +
-                                "  position: " + (from[0] / 16 + size / 2 - 0.5) + "," + (from[1] / 16) + "," + (from[2] / 16 + size / 2 - 0.5) + "\n" +
+                                "  position: " + (from[0] / 16 + size / 2 - 0.5) + "," + (from[1] / 16) + "," + -(from[2] / 16 + size / 2 - 0.5) + "\n" +
                                 "  scale: " + size + "\n";
 
                         } else {
@@ -107,28 +108,28 @@ const exportDialog: Dialog = new Dialog({
                             let width: number, height: number;
                             if (size[0] === size[2]) {
                                 width = size[0];
-                                height = Math.round(-size[1] / width * 100 + 100);
+                                height = Math.round(size[1] / width * 100 - 100);
                                 yaml += "- type: shulker\n" +
-                                    "  position: " + (from[0] / 16 + width / 2 - 0.5) + "," + (from[1] / 16) + "," + (from[2] / 16 + width / 2 - 0.5) + "\n" +
+                                    "  position: " + (from[0] / 16 + width / 2 - 0.5) + "," + (from[1] / 16) + "," + -(from[2] / 16 + width / 2 - 0.5) + "\n" +
                                     "  scale: " + width + "\n" +
                                     "  peek: " + height + "\n" +
-                                    "  direction: DOWN\n";
+                                    "  direction: up\n";
                             } else if (size[0] === size[1]) {
                                 width = size[0];
-                                height = Math.round(-size[2] / width * 100 + 100);
+                                height = Math.round(size[2] / width * 100 - 100);
                                 yaml += "- type: shulker\n" +
-                                    "  position: " + (from[0] / 16 + width / 2 - 0.5) + "," + (from[1] / 16) + "," + (from[2] / 16 - 0.5 + width / 2) + "\n" +
+                                    "  position: " + (from[0] / 16 + width / 2 - 0.5) + "," + (from[1] / 16) + "," + -(from[2] / 16 - 0.5 + width / 2) + "\n" +
                                     "  scale: " + width + "\n" +
                                     "  peek: " + height + "\n" +
-                                    "  direction: NORTH\n";
+                                    "  direction: south\n";
                             } else {
                                 width = size[1];
-                                height = Math.round(-size[0] / width * 100 + 100);
+                                height = Math.round(size[0] / width * 100 - 100);
                                 yaml += "- type: shulker\n" +
-                                    "  position: " + (from[0] / 16 - 0.5 + width / 2) + "," + (from[1] / 16) + "," + (from[2] / 16 + width / 2 - 0.5) + "\n" +
+                                    "  position: " + (from[0] / 16 - 0.5 + width / 2) + "," + (from[1] / 16) + "," + -(from[2] / 16 + width / 2 - 0.5) + "\n" +
                                     "  scale: " + width + "\n" +
                                     "  peek: " + height + "\n" +
-                                    "  direction: WEST\n";
+                                    "  direction: east\n";
                             }
                         }
                     });
@@ -137,7 +138,7 @@ const exportDialog: Dialog = new Dialog({
                         const from: number[] = cube.from;
                         const width: number = (cube.to[0] - from[0]) / 16;
                         yaml += "- type: interaction\n" +
-                            "  position: " + (from[0] / 16 + width / 2 - 0.5) + "," + (from[1] / 16) + "," + (from[2] / 16 + width / 2 - 0.5) + "\n" +
+                            "  position: " + (from[0] / 16 + width / 2 - 0.5) + "," + (from[1] / 16) + "," + -(from[2] / 16 + width / 2 - 0.5) + "\n" +
                             "  width: " + width + "\n" +
                             "  height: " + (cube.to[1] - from[1]) / 16 + "\n";
                     });
