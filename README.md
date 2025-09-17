@@ -21,14 +21,30 @@ public static void spawnHitBox(JsonObject hitboxData, Location spawnLocation) {
   switch (type) {
     case "entity" ->
         hitboxArray.forEach(jsonElement -> {  // You can also use happy ghasts here I am using shulkers riding item displays because it works on 1.21.2+ (below shulkers are not completely invisible)
-          JsonObject position = jsonElement.getAsJsonObject().get("position").getAsJsonObject();
-          ItemDisplay itemDisplay = (ItemDisplay) spawnLocation.getWorld().spawnEntity(spawnLocation.clone().add(position.get("x").getAsFloat(), position.get("y").getAsFloat(), position.get("z").getAsFloat()), EntityType.ITEM_DISPLAY);
-          Shulker shulkerEntity = (Shulker) spawnLocation.getWorld().spawnEntity(spawnLocation.clone().add(position.get("x").getAsFloat(), position.get("y").getAsFloat(), position.get("z").getAsFloat()), EntityType.SHULKER);
-          itemDisplay.addPassenger(shulkerEntity);
-          shulkerEntity.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(jsonElement.getAsJsonObject().get("size").getAsFloat());
-          shulkerEntity.setAI(false);
-          shulkerEntity.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, PotionEffect.INFINITE_DURATION, 0, false, false));
-          shulkerEntity.setInvulnerable(true);
+          if (jsonElement.getAsJsonObject().get("shulker_only") != null && jsonElement.getAsJsonObject().get("shulker_only").getAsBoolean()) {
+            JsonObject position = jsonElement.getAsJsonObject().get("position").getAsJsonObject();
+            ItemDisplay itemDisplay = (ItemDisplay) spawnLocation.getWorld().spawnEntity(spawnLocation.clone().add(position.get("x").getAsFloat(), position.get("y").getAsFloat(), position.get("z").getAsFloat()), EntityType.ITEM_DISPLAY);
+            Shulker shulkerEntity = (Shulker) spawnLocation.getWorld().spawnEntity(spawnLocation.clone().add(position.get("x").getAsFloat(), position.get("y").getAsFloat(), position.get("z").getAsFloat()), EntityType.SHULKER);
+            itemDisplay.addPassenger(shulkerEntity);
+            shulkerEntity.getAttribute(Attribute.SCALE).setBaseValue(jsonElement.getAsJsonObject().get("size").getAsFloat());
+            BlockFace blockFace = switch (jsonElement.getAsJsonObject().get("face").getAsInt()) { // In Minecraft they use numbers but not using bukkit
+              case 3 -> BlockFace.NORTH;
+              case 5 -> BlockFace.WEST;
+              default -> BlockFace.DOWN;
+            };
+            shulkerEntity.setAttachedFace(blockFace);
+            float peek = jsonElement.getAsJsonObject().get("height").getAsInt()/-100f;
+            shulkerEntity.setPeek(peek);
+            shulkerEntity.setAI(false);
+            //shulkerEntity.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, PotionEffect.INFINITE_DURATION, 0, false, false));
+            shulkerEntity.setInvulnerable(true);
+          } else {
+            JsonObject position = jsonElement.getAsJsonObject().get("position").getAsJsonObject();
+            HappyGhast happyGhast = (HappyGhast) spawnLocation.getWorld().spawnEntity(spawnLocation.clone().add(position.get("x").getAsFloat(), position.get("y").getAsFloat(), position.get("z").getAsFloat()), EntityType.HAPPY_GHAST);
+            happyGhast.getAttribute(Attribute.SCALE).setBaseValue(jsonElement.getAsJsonObject().get("size").getAsFloat() * 0.25);
+            happyGhast.setAI(false);
+            happyGhast.setInvulnerable(true);
+          }
         });
     case "block" -> hitboxArray.forEach(jsonElement -> {
       JsonObject position = jsonElement.getAsJsonObject().get("position").getAsJsonObject();
