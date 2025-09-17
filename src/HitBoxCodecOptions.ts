@@ -11,8 +11,9 @@ export class HitBoxCodecOptions implements CodecOptions {
 
     compile(): string {
         if (!Project) throw new Error('No project to compile.');
+        let hitboxes, type;
         if ((Project as any).hitbox_type === "entity") {
-            const hitboxes = Cube.all.map((cube: Cube) => {
+            hitboxes = Cube.all.map((cube: Cube) => {
                 if (!(cube as any).is_shulker_only) {
                     const from: number[] = cube.from;
                     const to: number[] = cube.to;
@@ -66,9 +67,9 @@ export class HitBoxCodecOptions implements CodecOptions {
                     }
                 }
             });
-            return JSON.stringify({hitboxes, type: "entity"}, null, 2);
+            type = "entity";
         } else if ((Project as any).hitbox_type === "block") {
-            const hitboxes = Cube.all.map((cube: Cube) => {
+            hitboxes = Cube.all.map((cube: Cube) => {
                 const from: number[] = cube.from;
                 return {
                     position: {
@@ -78,9 +79,9 @@ export class HitBoxCodecOptions implements CodecOptions {
                     }
                 };
             });
-            return JSON.stringify({hitboxes, type: "block"}, null, 2);
+            type = "block";
         } else if ((Project as any).hitbox_type === "interaction") {
-            const hitboxes = Cube.all.map((cube: Cube) => {
+            hitboxes = Cube.all.map((cube: Cube) => {
                 const from: number[] = cube.from;
                 const width: number = (cube.to[0] - from[0]) / 16;
                 return {
@@ -89,9 +90,9 @@ export class HitBoxCodecOptions implements CodecOptions {
                     height: (cube.to[1] - from[1]) / 16
                 };
             });
-            return JSON.stringify({version: version, hitboxes, type: "interaction"}, null, 2);
-        }
-        throw new Error("Invalid HitBox type");
+            type = "interaction";
+        } else throw new Error("Invalid HitBox type");
+        return JSON.stringify({version: version, hitboxes, type: type}, null, 2);
     }
 
     export(): void {

@@ -96,7 +96,6 @@ const exportDialog: Dialog = new Dialog({
                             yaml += "- type: happy_ghast\n" +
                                 "  position: " + (from[0] / 16 + size / 2 - 0.5) + "," + (from[1] / 16) + "," + -(from[2] / 16 + size / 2 - 0.5) + "\n" +
                                 "  scale: " + size + "\n";
-
                         } else {
                             const from: number[] = cube.from;
                             const to: number[] = cube.to;
