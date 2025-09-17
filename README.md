@@ -7,7 +7,7 @@
 ## How to install
 See https://github.com/misieur/hitbox-utils/releases
 
-![](https://dcbadge.limes.pink/api/server/https://discord.gg/5VSeDcyJt7)
+[![](https://dcbadge.limes.pink/api/server/https://discord.gg/5VSeDcyJt7)](https://discord.gg/5VSeDcyJt7)
 
 ## How to use it (for plugin developers)
 Here is an example of how to use the file in Java using the Bukkit API. You can also look at the generated files it is just json, the generated data are the one you need to use ingame not made for blockbench, everything is handled by the blockbench plugin.
