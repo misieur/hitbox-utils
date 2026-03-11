@@ -1,7 +1,7 @@
 {
-  "name": "misieurengine",
-  "version": "1.0.0",
-  "description": "Blockbench plugin MisieurEngine",
+  "name": "hitbox-utils",
+  "version": "1.1.0",
+  "description": "Hitbox Utils Blockbench plugin",
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --watch --mode development"
